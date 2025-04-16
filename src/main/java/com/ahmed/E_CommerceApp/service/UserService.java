@@ -2,13 +2,22 @@ package com.ahmed.E_CommerceApp.service;
 
 import com.ahmed.E_CommerceApp.dao.UserRepo;
 import com.ahmed.E_CommerceApp.dto.ChangePasswordRequest;
+import com.ahmed.E_CommerceApp.dto.LoginRequest;
 import com.ahmed.E_CommerceApp.exception.ResourceNotFoundException;
 import com.ahmed.E_CommerceApp.model.User;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 @Service
@@ -16,8 +25,10 @@ import java.util.Random;
 public class UserService {
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
-    public User register(User user){
+    public ResponseEntity<User> register(User user){
         if(userRepo.findByEmail(user.getEmail()).isPresent()){
             throw new IllegalStateException("this email exist");
         }
@@ -26,7 +37,7 @@ public class UserService {
         user.setConfirmationCode(generateConfirmationCode());
         user.setEmailConfirmation(false);
 
-        return userRepo.save(user);
+        return ResponseEntity.ok(userRepo.save(user));
     }
 
     public User getUserByEmail(String email){
@@ -34,14 +45,17 @@ public class UserService {
 
     }
 
-    public void changePassword(String email , ChangePasswordRequest request){
-        User user=userRepo.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        if(!passwordEncoder.matches(user.getPassword(),request.getCurrentPassword())){
+    public ResponseEntity<String> changePassword(Authentication connectedUser, ChangePasswordRequest request){
+        User user=(User) connectedUser.getPrincipal();
+
+        if(!passwordEncoder.matches(request.getCurrentPassword() , user.getPassword())){ // must current first in comparison because i will enter current first in postman
             throw new BadCredentialsException("wrong password");
         }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepo.save(user);
+        return ResponseEntity.ok("changed successfully");
     }
+
     public User getUserById(Long id) {
         return userRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
@@ -51,6 +65,19 @@ public class UserService {
         Random random = new Random();
         int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
+    }
+
+    public ResponseEntity<String> loginUser(
+            @RequestBody @Valid LoginRequest request
+            ){
+        var authUser=authenticationManager.authenticate(
+          new UsernamePasswordAuthenticationToken(request.getEmail() , request.getPassword())
+        );
+        User user=(User) authUser.getPrincipal();
+        Map<String , Object> claims=new HashMap<>();
+        claims.put("fullName" , user.getUsername());
+        String token=jwtService.generateToken(user);
+        return ResponseEntity.ok(token);
     }
 
 }
