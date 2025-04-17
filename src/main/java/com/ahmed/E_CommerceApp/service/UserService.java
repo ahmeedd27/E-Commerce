@@ -2,6 +2,7 @@ package com.ahmed.E_CommerceApp.service;
 
 import com.ahmed.E_CommerceApp.dao.UserRepo;
 import com.ahmed.E_CommerceApp.dto.ChangePasswordRequest;
+import com.ahmed.E_CommerceApp.dto.EmailConfirmationRequest;
 import com.ahmed.E_CommerceApp.dto.LoginRequest;
 import com.ahmed.E_CommerceApp.exception.ResourceNotFoundException;
 import com.ahmed.E_CommerceApp.model.User;
@@ -27,6 +28,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final EmailService emailService;
 
     public ResponseEntity<User> register(User user){
         if(userRepo.findByEmail(user.getEmail()).isPresent()){
@@ -36,7 +38,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setConfirmationCode(generateConfirmationCode());
         user.setEmailConfirmation(false);
-
+emailService.sendConfirmationCode(user);
         return ResponseEntity.ok(userRepo.save(user));
     }
 
@@ -80,4 +82,24 @@ public class UserService {
         return ResponseEntity.ok(token);
     }
 
+
+    public ResponseEntity<String> confirmEmail(EmailConfirmationRequest request) {
+        User user=userRepo.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("Not Found"));
+        if(user.getConfirmationCode().equals(request.getConfirmationCode())){
+            user.setEmailConfirmation(true);
+            user.setConfirmationCode(null);
+            userRepo.save(user);
+            return ResponseEntity.ok("Confirmed Successfully");
+        }else{
+            throw new BadCredentialsException("Invalid Code");
+        }
+
+    }
+
+    public ResponseEntity<String> getUserRole(Authentication connectedUser) {
+        User user=(User) connectedUser.getPrincipal();
+        String role=String.valueOf(user.getRole());
+        return ResponseEntity.ok(role);
+    }
 }
