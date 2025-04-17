@@ -18,7 +18,7 @@ public class ProductListDTO {
     private String description;
     @Positive(message = "Price must be positive")
     private BigDecimal price;
-    @PositiveOrZero(message = "Qunatity must be positive or zero")
+    @PositiveOrZero(message = "Quantity must be positive or zero")
     private Integer quantity;
     private String imageUrl;
 }
