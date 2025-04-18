@@ -24,7 +24,6 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDTO> createProduct(
             @RequestPart("product") @Valid ProductDTO productDTO ,
             @RequestPart(value="image" , required = false) MultipartFile multipartFile
@@ -32,7 +31,6 @@ public class ProductController {
         return productService.createProduct(productDTO , multipartFile);
     }
     @PutMapping(value="/{id}" , consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDTO> updateProduct(
             @PathVariable Long id ,
             @RequestPart("product") @Valid ProductDTO productDTO ,
@@ -42,7 +40,6 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteProduct(@PathVariable Long id){
         return productService.deleteProduct(id);
     }
