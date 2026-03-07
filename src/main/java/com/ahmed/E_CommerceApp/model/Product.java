@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,7 +23,12 @@ public class Product {
     private BigDecimal price;
      private String imageUrl;
 
-     @OneToMany(mappedBy = "product" , cascade = CascadeType.ALL , fetch = FetchType.LAZY
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category; //  Added: every product belongs to a category and every category has many products
+
+
+    @OneToMany(mappedBy = "product" , cascade = CascadeType.ALL , fetch = FetchType.LAZY
              , orphanRemoval = true)
      private List<Comment> comments;
 }

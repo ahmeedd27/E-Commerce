@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -25,5 +27,7 @@ public class Comment {
     @ManyToOne
     @JoinColumn(name="product_id", nullable = false)
     private Product product;
+
+    private LocalDateTime createdAt; //  Added: sort reviews by date
 
 }

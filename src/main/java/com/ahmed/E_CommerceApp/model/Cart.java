@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -25,4 +26,6 @@ public class Cart {
     @OneToMany(mappedBy = "cart" , cascade = CascadeType.ALL , orphanRemoval = true
     , fetch = FetchType.LAZY)
     private List<CartItems> items;
+
+    private LocalDateTime updatedAt; //  Added: track last cart activity (abandoned cart logic)
 }
