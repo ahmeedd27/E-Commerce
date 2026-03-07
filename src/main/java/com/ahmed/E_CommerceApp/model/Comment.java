@@ -1,22 +1,24 @@
 package com.ahmed.E_CommerceApp.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Data
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
+@ToString(exclude = {"user", "product"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Entity
 public class Comment {
+    @EqualsAndHashCode.Include
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String content;
     private Integer score;
 

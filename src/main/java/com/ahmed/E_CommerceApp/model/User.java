@@ -9,22 +9,30 @@ import lombok.*;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"orders", "cart", "comments"}) // exclude relationships
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class User {
+    @EqualsAndHashCode.Include
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
+
     @Email
     @NotBlank
     @NotEmpty
     private String email;
+
     @NotBlank
     @NotEmpty
     private String password;
+
     private String phoneNumber; //  Added: user's default phone number
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -37,10 +45,8 @@ public class User {
     @OneToMany(mappedBy = "user" , cascade = CascadeType.ALL ,
             fetch = FetchType.LAZY , orphanRemoval = true)
     private List<Comment> comments;
+
     private boolean emailConfirmation;
+
     private String confirmationCode;
-
-
-
-
 }

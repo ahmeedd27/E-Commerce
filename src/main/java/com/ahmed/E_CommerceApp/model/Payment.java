@@ -3,20 +3,21 @@ package com.ahmed.E_CommerceApp.model;
 import com.ahmed.E_CommerceApp.model.enums.PaymentMethod;
 import com.ahmed.E_CommerceApp.model.enums.PaymentStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity
-@Data
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
+@ToString(exclude = {"order"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Entity
 public class Payment {
+    @EqualsAndHashCode.Include
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
