@@ -2,10 +2,7 @@ package com.ahmed.E_CommerceApp.service;
 
 import com.ahmed.E_CommerceApp.Config.CustomUserDetails;
 import com.ahmed.E_CommerceApp.dao.UserRepo;
-import com.ahmed.E_CommerceApp.dto.ChangePasswordRequest;
-import com.ahmed.E_CommerceApp.dto.EmailConfirmationRequest;
-import com.ahmed.E_CommerceApp.dto.LoginRequest;
-import com.ahmed.E_CommerceApp.dto.RegisterResponse;
+import com.ahmed.E_CommerceApp.dto.*;
 import com.ahmed.E_CommerceApp.exception.ResourceNotFoundException;
 import com.ahmed.E_CommerceApp.model.User;
 import com.ahmed.E_CommerceApp.model.enums.Role;
@@ -32,14 +29,18 @@ public class UserService {
     private final EmailService emailService;
 
 
-    public ResponseEntity<RegisterResponse> register(User user) {
-        if (userRepo.findByEmail(user.getEmail()).isPresent()) {
+    public ResponseEntity<RegisterResponse> register(RegisterRequest request) {
+        if (userRepo.findByEmail(request.getEmail()).isPresent()) {
             throw new IllegalStateException("Email already exists");
         }
-        user.setRole(Role.USER);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setConfirmationCode(generateConfirmationCode());
-        user.setEmailConfirmation(false);
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .phoneNumber(request.getPhoneNumber())
+                .role(Role.USER)
+                .confirmationCode(generateConfirmationCode())
+                .emailConfirmation(false)
+                .build();
         emailService.sendConfirmationCode(user);
         User saved = userRepo.save(user);
         return ResponseEntity.ok(new RegisterResponse(
@@ -77,15 +78,18 @@ public class UserService {
         return String.valueOf(code);
     }
 
-    public ResponseEntity<String> loginUser(
-            LoginRequest request
-    ) {
+    public ResponseEntity<LoginResponse> loginUser(LoginRequest request) {
         var authUser = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
-        UserDetails userDetails = (UserDetails) authUser.getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) authUser.getPrincipal();
         String token = jwtService.generateToken(userDetails);
-        return ResponseEntity.ok(token);
+        return ResponseEntity.ok(new LoginResponse(
+                token,
+                "Bearer",
+                userDetails.getUsername(),
+                userDetails.getUser().getRole().name()
+        ));
     }
 
 

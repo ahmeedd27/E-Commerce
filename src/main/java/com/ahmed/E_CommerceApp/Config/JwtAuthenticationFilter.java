@@ -1,6 +1,7 @@
 package com.ahmed.E_CommerceApp.Config;
 
 import com.ahmed.E_CommerceApp.service.JwtService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,10 +32,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       final String auth=request.getHeader("Authorization");
       String username=null;
       String jwt=null;
-      if(auth!=null&&auth.startsWith("Bearer ")){
-          jwt=auth.substring(7);
-          username=jwtService.extractUserName(jwt);
-      }
+        if (auth != null && auth.startsWith("Bearer ")) {
+            jwt = auth.substring(7);
+            try {
+                username = jwtService.extractUserName(jwt);
+            } catch (JwtException e) {
+                //  Bad token — just continue without setting authentication
+                // Spring Security will return 401 automatically
+                filterChain.doFilter(request, response);
+                return;
+            }
+        }
       if(username!=null && SecurityContextHolder.getContext().getAuthentication()==null){
           UserDetails userDetails= userDetailsService.loadUserByUsername(username);
           if(jwtService.validateToken(jwt , userDetails)){

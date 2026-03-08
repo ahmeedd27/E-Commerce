@@ -54,9 +54,14 @@ public class SecurityConfig {
                         .requestMatchers("/images/**").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/confirm-email").permitAll()
+
                         .requestMatchers("/api/orders/{orderId}/status").hasRole("ADMIN")
                         .requestMatchers("/api/products/createProduct" ,
-                                "/api/products/updateProduct" , "/api/products/deleteProduct" ).hasRole("ADMIN")
+                                "/api/products/updateProduct"
+                                , "/api/products/deleteProduct" )
+                        .hasRole("ADMIN")
+
                         .requestMatchers("swagger-ui.html", "swagger-ui/**" ,
                            "/v3/api-docs" , "/v3/api-docs/**" , "/swagger-resources/**",
                                 "/webjars/**").permitAll()
@@ -70,7 +75,7 @@ public class SecurityConfig {
     }
     @Bean
     public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12);
     }
     @Bean
     public AuthenticationProvider authenticationProvider(){
