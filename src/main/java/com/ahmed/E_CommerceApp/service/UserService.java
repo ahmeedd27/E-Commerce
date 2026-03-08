@@ -5,10 +5,10 @@ import com.ahmed.E_CommerceApp.dao.UserRepo;
 import com.ahmed.E_CommerceApp.dto.ChangePasswordRequest;
 import com.ahmed.E_CommerceApp.dto.EmailConfirmationRequest;
 import com.ahmed.E_CommerceApp.dto.LoginRequest;
+import com.ahmed.E_CommerceApp.dto.RegisterResponse;
 import com.ahmed.E_CommerceApp.exception.ResourceNotFoundException;
 import com.ahmed.E_CommerceApp.model.User;
 import com.ahmed.E_CommerceApp.model.enums.Role;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,12 +18,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.security.SecureRandom;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+
 
 @Service
 @RequiredArgsConstructor
@@ -33,18 +30,24 @@ public class UserService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final EmailService emailService;
-    private final CustomUserDetails customUserDetails;
 
-    public ResponseEntity<User> register(User user) {
+
+    public ResponseEntity<RegisterResponse> register(User user) {
         if (userRepo.findByEmail(user.getEmail()).isPresent()) {
-            throw new IllegalStateException("this email exist");
+            throw new IllegalStateException("Email already exists");
         }
         user.setRole(Role.USER);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setConfirmationCode(generateConfirmationCode());
         user.setEmailConfirmation(false);
         emailService.sendConfirmationCode(user);
-        return ResponseEntity.ok(userRepo.save(user));
+        User saved = userRepo.save(user);
+        return ResponseEntity.ok(new RegisterResponse(
+                saved.getId(),
+                saved.getEmail(),
+                saved.getRole().name(),
+                "Registration successful. Please check your email to confirm."
+        ));
     }
 
     public User getUserByEmail(String email) {
@@ -89,20 +92,21 @@ public class UserService {
     public ResponseEntity<String> confirmEmail(EmailConfirmationRequest request) {
         User user = userRepo.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("Not Found"));
-        if (user.getConfirmationCode().equals(request.getConfirmationCode())) {
-            user.setEmailConfirmation(true);
-            user.setConfirmationCode(null);
-            userRepo.save(user);
-            return ResponseEntity.ok("Confirmed Successfully");
-        } else {
-            throw new BadCredentialsException("Invalid Code");
+        if (user.getConfirmationCode() == null) {
+            throw new BadCredentialsException("Email already confirmed or code expired");
         }
-
+        if (!user.getConfirmationCode().equals(request.getConfirmationCode())) {
+            throw new BadCredentialsException("Invalid confirmation code");
+        }
+        user.setEmailConfirmation(true);
+        user.setConfirmationCode(null);
+        userRepo.save(user);
+        return ResponseEntity.ok("Confirmed Successfully");
     }
 
     public ResponseEntity<String> getUserRole(Authentication connectedUser) {
-        User user = (User) connectedUser.getPrincipal();
-        String role = String.valueOf(user.getRole());
+        CustomUserDetails userDetails = (CustomUserDetails) connectedUser.getPrincipal();
+        String role = String.valueOf(userDetails.getUser().getRole());
         return ResponseEntity.ok(role);
     }
 }

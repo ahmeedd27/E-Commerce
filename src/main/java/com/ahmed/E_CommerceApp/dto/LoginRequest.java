@@ -8,12 +8,12 @@ import lombok.Data;
 
 @Data
 public class LoginRequest {
-    @NotEmpty(message = "should not being empty")
-    @NotBlank(message = "it is mandatory")
-    @Email(message="email is not formatted")
+
+    @NotBlank(message = "Email Is Mandatory")
+    @Email(message="Email format is invalid")
     private String email;
-    @NotEmpty(message = "should not being empty")
-    @NotBlank(message = "not mandatory")
-    @Size(min=8 , message="Password should 8 characters long minimum")
+
+    @NotBlank(message = "Password is mandatory")
+    @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
 }

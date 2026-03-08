@@ -3,6 +3,7 @@ package com.ahmed.E_CommerceApp.conroller;
 import com.ahmed.E_CommerceApp.dto.ChangePasswordRequest;
 import com.ahmed.E_CommerceApp.dto.EmailConfirmationRequest;
 import com.ahmed.E_CommerceApp.dto.LoginRequest;
+import com.ahmed.E_CommerceApp.dto.RegisterResponse;
 import com.ahmed.E_CommerceApp.exception.ResourceNotFoundException;
 import com.ahmed.E_CommerceApp.model.User;
 import com.ahmed.E_CommerceApp.service.UserService;
@@ -27,10 +28,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(
-            @RequestBody User user
-            ){
-          return userService.register(user);
+    public ResponseEntity<RegisterResponse> register(@RequestBody @Valid User user) { //  add @Valid
+        return userService.register(user);
     }
 
     @PostMapping("/change-password")
@@ -42,15 +41,8 @@ public class AuthController {
     }
 
     @PostMapping("/confirm-email")
-    public ResponseEntity<String> confirmEmail(@RequestBody EmailConfirmationRequest request){
-        try{
-            return userService.confirmEmail(request);
-        }catch (BadCredentialsException ex){
-           return ResponseEntity.badRequest().body("Invalid Code");
-        }
-        catch (ResourceNotFoundException e){
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<String> confirmEmail(@RequestBody EmailConfirmationRequest request) {
+        return userService.confirmEmail(request);
     }
 
     @GetMapping("/user/{id}")
@@ -60,7 +52,6 @@ public class AuthController {
 
     @GetMapping("/user/role")
     public ResponseEntity<String> getUserRole(Authentication connectedUser){
-
         return userService.getUserRole(connectedUser);
     }
 
