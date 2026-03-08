@@ -22,11 +22,9 @@ public class User {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank // @NotBlank already implies @NotEmpty
-    @Email
+
     private String email;
 
-    @NotBlank // @NotBlank already implies @NotEmpty
     private String password;
 
     private String phoneNumber; //  Added: user's default phone number

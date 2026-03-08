@@ -29,7 +29,7 @@ public class UserService {
     private final EmailService emailService;
 
 
-    public ResponseEntity<RegisterResponse> register(RegisterRequest request) {
+    public RegisterResponse register(RegisterRequest request) {
         if (userRepo.findByEmail(request.getEmail()).isPresent()) {
             throw new IllegalStateException("Email already exists");
         }
@@ -43,34 +43,28 @@ public class UserService {
                 .build();
         emailService.sendConfirmationCode(user);
         User saved = userRepo.save(user);
-        return ResponseEntity.ok(new RegisterResponse(
+        return new RegisterResponse(
                 saved.getId(),
                 saved.getEmail(),
                 saved.getRole().name(),
                 "Registration successful. Please check your email to confirm."
-        ));
+        );
     }
 
-    public User getUserByEmail(String email) {
-        return userRepo.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-    }
 
-    public ResponseEntity<String> changePassword(Authentication connectedUser, ChangePasswordRequest request) {
+    public String changePassword(Authentication connectedUser, ChangePasswordRequest request) {
         CustomUserDetails userDetails = (CustomUserDetails) connectedUser.getPrincipal();
         User user = userDetails.getUser();
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) { // must current first in comparison because i will enter current first in postman
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new BadCredentialsException("wrong password");
         }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepo.save(user);
-        return ResponseEntity.ok("changed successfully");
+        return "changed successfully";
     }
 
-    public User getUserById(Long id) {
-        return userRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-    }
+
 
     private String generateConfirmationCode() {
         SecureRandom random = new SecureRandom();
@@ -78,22 +72,22 @@ public class UserService {
         return String.valueOf(code);
     }
 
-    public ResponseEntity<LoginResponse> loginUser(LoginRequest request) {
+    public LoginResponse loginUser(LoginRequest request) {
         var authUser = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
         CustomUserDetails userDetails = (CustomUserDetails) authUser.getPrincipal();
         String token = jwtService.generateToken(userDetails);
-        return ResponseEntity.ok(new LoginResponse(
-                token,
-                "Bearer",
-                userDetails.getUsername(),
-                userDetails.getUser().getRole().name()
-        ));
+        return LoginResponse.builder()
+                .token(token)
+                .type("Bearer")
+                .email(userDetails.getUsername())
+                .role(userDetails.getUser().getRole().name())
+                .build();
     }
 
 
-    public ResponseEntity<String> confirmEmail(EmailConfirmationRequest request) {
+    public String confirmEmail(EmailConfirmationRequest request) {
         User user = userRepo.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("Not Found"));
         if (user.getConfirmationCode() == null) {
@@ -105,12 +99,22 @@ public class UserService {
         user.setEmailConfirmation(true);
         user.setConfirmationCode(null);
         userRepo.save(user);
-        return ResponseEntity.ok("Confirmed Successfully");
+        return "Confirmed Successfully";
     }
 
-    public ResponseEntity<String> getUserRole(Authentication connectedUser) {
+    public UserSummaryResponse getUserById(Long id) {
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        return  UserSummaryResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .role(user.getRole().name())
+                .build();
+     }
+
+    public String getUserRole(Authentication connectedUser) {
         CustomUserDetails userDetails = (CustomUserDetails) connectedUser.getPrincipal();
-        String role = String.valueOf(userDetails.getUser().getRole());
-        return ResponseEntity.ok(role);
+        return String.valueOf(userDetails.getUser().getRole());
     }
 }
