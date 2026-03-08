@@ -1,7 +1,6 @@
 package com.ahmed.E_CommerceApp.conroller;
 
 import com.ahmed.E_CommerceApp.dto.*;
-import com.ahmed.E_CommerceApp.model.User;
 import com.ahmed.E_CommerceApp.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
