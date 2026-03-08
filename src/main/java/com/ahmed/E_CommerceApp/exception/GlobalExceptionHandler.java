@@ -20,6 +20,12 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), req); // 404
     }
 
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<ErrorDetails> handleTooManyRequests(
+            TooManyRequestsException ex, WebRequest req) {
+        return build(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), req); // 429
+    }
+
     @ExceptionHandler(InsufficientStockException.class)
     public ResponseEntity<ErrorDetails> handleStock(InsufficientStockException ex, WebRequest req) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), req); // 409

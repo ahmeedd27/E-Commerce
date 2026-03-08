@@ -1,7 +1,10 @@
 package com.ahmed.E_CommerceApp.conroller;
 
+import com.ahmed.E_CommerceApp.Config.LoginRateLimiter;
 import com.ahmed.E_CommerceApp.dto.*;
+import com.ahmed.E_CommerceApp.exception.TooManyRequestsException;
 import com.ahmed.E_CommerceApp.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,15 +17,36 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
     private final UserService userService;
+    private final LoginRateLimiter loginRateLimiter;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> loginUser(@RequestBody @Valid LoginRequest loginRequest) {
+    public ResponseEntity<LoginResponse> loginUser(
+            @RequestBody @Valid LoginRequest loginRequest
+            , HttpServletRequest request) {
+        // Extract the client's IP address
+        String clientIp = loginRateLimiter.getClientIp(request);
+
+        // Check if this IP is allowed to attempt login
+        if (!loginRateLimiter.isLoginAllowed(clientIp)) {
+            throw new TooManyRequestsException(
+                    "Too many login attempts. Please wait before trying again."
+            );
+        }
         return ResponseEntity.ok(userService.loginUser(loginRequest));
     }
 
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(@RequestBody @Valid RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(
+            @RequestBody @Valid RegisterRequest request,
+            HttpServletRequest httpRequest) {
+
+        String clientIp = loginRateLimiter.getClientIp(httpRequest);
+        if (!loginRateLimiter.isRegisterAllowed(clientIp)) {
+            throw new TooManyRequestsException(
+                    "Too many registration attempts. Please wait before trying again."
+            );
+        }
         return ResponseEntity.ok(userService.register(request));
     }
 
@@ -35,7 +59,16 @@ public class AuthController {
     }
 
     @PostMapping("/confirm-email")
-    public ResponseEntity<String> confirmEmail(@RequestBody @Valid EmailConfirmationRequest request) {
+    public ResponseEntity<String> confirmEmail(
+            @RequestBody @Valid EmailConfirmationRequest request,
+            HttpServletRequest httpRequest) {
+
+        String clientIp = loginRateLimiter.getClientIp(httpRequest);
+        if (!loginRateLimiter.isConfirmEmailAllowed(clientIp)) {
+            throw new TooManyRequestsException(
+                    "Too many confirmation attempts. Please wait before trying again."
+            );
+        }
         return ResponseEntity.ok(userService.confirmEmail(request));
     }
 
