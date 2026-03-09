@@ -9,6 +9,7 @@ import com.ahmed.E_CommerceApp.exception.ResourceNotFoundException;
 import com.ahmed.E_CommerceApp.mapper.CartMapper;
 import com.ahmed.E_CommerceApp.mapper.OrderMapper;
 import com.ahmed.E_CommerceApp.model.*;
+import com.ahmed.E_CommerceApp.model.enums.OrderStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -73,7 +74,7 @@ public class OrderService {
         }
         Order order=new Order();
         order.setCreatedAt(LocalDateTime.now());
-        order.setStatus(Order.OrderStatus.PREPARING);
+        order.setStatus(OrderStatus.PREPARING);
         order.setAddress(address);
         order.setPhoneNumber(phoneNumber);
         order.setItems(createOrderItems(cart , order));
@@ -93,7 +94,7 @@ public class OrderService {
         return ResponseEntity.ok(ordersDto);
     }
 
-    public ResponseEntity<OrderDTO> updateOrderStatus(Long orderId, Order.OrderStatus status) {
+    public ResponseEntity<OrderDTO> updateOrderStatus(Long orderId, OrderStatus status) {
         Order order=orderRepo.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Not Found"));
         order.setStatus(status);

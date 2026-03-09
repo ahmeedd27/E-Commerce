@@ -3,6 +3,8 @@ package com.ahmed.E_CommerceApp.model;
 import com.ahmed.E_CommerceApp.model.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -42,4 +44,6 @@ public class User {
     private boolean emailConfirmation;
 
     private String confirmationCode;
+
+    private LocalDateTime confirmationCodeExpiresAt;
 }

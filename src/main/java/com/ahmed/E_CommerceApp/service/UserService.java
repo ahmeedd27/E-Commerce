@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 
 
 @Service
@@ -37,6 +38,7 @@ public class UserService {
                 .phoneNumber(request.getPhoneNumber())
                 .role(Role.USER)
                 .confirmationCode(generateConfirmationCode())
+                .confirmationCodeExpiresAt(LocalDateTime.now().plusMinutes(15))
                 .emailConfirmation(false)
                 .build();
         emailService.sendConfirmationCode(user);
@@ -87,18 +89,53 @@ public class UserService {
 
     public String confirmEmail(EmailConfirmationRequest request) {
         User user = userRepo.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("Not Found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Check 1 — already confirmed?
         if (user.getConfirmationCode() == null) {
-            throw new BadCredentialsException("Email already confirmed or code expired");
+            throw new BadCredentialsException("Email already confirmed");
         }
+
+        // Check 2 — is the code expired?  NEW
+        if (user.getConfirmationCodeExpiresAt() == null ||
+                LocalDateTime.now().isAfter(user.getConfirmationCodeExpiresAt())) {
+            throw new BadCredentialsException(
+                    "Confirmation code has expired. Please request a new one."
+            );
+        }
+
+        // Check 3 — is the code correct?
         if (!user.getConfirmationCode().equals(request.getConfirmationCode())) {
             throw new BadCredentialsException("Invalid confirmation code");
         }
+
+        // All checks passed — confirm the email
         user.setEmailConfirmation(true);
         user.setConfirmationCode(null);
+        user.setConfirmationCodeExpiresAt(null); //  clean up expiry too
         userRepo.save(user);
         return "Confirmed Successfully";
     }
+
+    // this method meant for one who register and want to confirm after he register by more than 15 minutes
+    public String resendConfirmationCode(String email) {
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // No point resending if already confirmed
+        if (user.isEmailConfirmation()) {
+            throw new IllegalStateException("Email is already confirmed");
+        }
+
+        // Generate a fresh code with a fresh 15-minute window
+        user.setConfirmationCode(generateConfirmationCode());
+        user.setConfirmationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
+        userRepo.save(user);
+
+        emailService.sendConfirmationCode(user);
+        return "New confirmation code sent. Please check your email.";
+    }
+
 
     public UserSummaryResponse getUserById(Long id) {
         User user = userRepo.findById(id)
