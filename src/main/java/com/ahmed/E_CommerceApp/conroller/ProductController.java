@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,33 +25,40 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDTO> createProduct(
             @RequestPart("product") @Valid ProductDTO productDTO ,
             @RequestPart(value="image" , required = false) MultipartFile multipartFile
             ) throws IOException {
-        return productService.createProduct(productDTO , multipartFile);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(productService.createProduct(productDTO , multipartFile));
     }
+
+
     @PutMapping(value="/{id}" , consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDTO> updateProduct(
             @PathVariable Long id ,
             @RequestPart("product") @Valid ProductDTO productDTO ,
             @RequestPart(value = "image" , required = false) MultipartFile image
     ) throws IOException {
-         return productService.updateProduct(id , productDTO , image);
+         return ResponseEntity.ok(productService.updateProduct(id , productDTO , image));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteProduct(@PathVariable Long id){
-        return productService.deleteProduct(id);
+        return ResponseEntity.ok(productService.deleteProduct(id));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProduct(@PathVariable Long id){
-        return productService.getProduct(id);
+        return ResponseEntity.ok(productService.getProduct(id));
     }
     @GetMapping
     public ResponseEntity<Page<ProductListDTO>> getProducts(@PageableDefault(size=10) Pageable pageable){
-        return productService.getProducts(pageable);
+        return ResponseEntity.ok(productService.getProducts(pageable));
     }
 
 

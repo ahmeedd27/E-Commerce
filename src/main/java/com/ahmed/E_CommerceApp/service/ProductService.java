@@ -6,11 +6,10 @@ import com.ahmed.E_CommerceApp.dto.ProductListDTO;
 import com.ahmed.E_CommerceApp.exception.ResourceNotFoundException;
 import com.ahmed.E_CommerceApp.mapper.ProductMapper;
 import com.ahmed.E_CommerceApp.model.Product;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -38,22 +37,22 @@ public class ProductService {
     }
 
      @Transactional
-    public ResponseEntity<ProductDTO> createProduct(ProductDTO productDTO, MultipartFile image) throws IOException {
+    public ProductDTO createProduct(ProductDTO productDTO, MultipartFile image) throws IOException {
         Product product = productMapper.toEntity(productDTO);
         if (image != null && !image.isEmpty()){
             String fileName=saveImage(image);
             product.setImageUrl("/images/"+fileName);
         }
 
-            return ResponseEntity.ok(productMapper.toDTO(productRepo.save(product)));
+            return productMapper.toDTO(productRepo.save(product));
     }
 
 
 
     @Transactional
-    public ResponseEntity<ProductDTO> updateProduct(Long id, ProductDTO productDTO, MultipartFile image) throws IOException {
+    public ProductDTO updateProduct(Long id, ProductDTO productDTO, MultipartFile image) throws IOException {
         Product existingProduct=productRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Not Found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
         existingProduct.setName(productDTO.getName());
         existingProduct.setPrice(productDTO.getPrice());
         existingProduct.setDescription(productDTO.getDescription());
@@ -62,26 +61,27 @@ public class ProductService {
             String fileName=saveImage(image);
             existingProduct.setImageUrl("/images/"+fileName);
         }
-        return ResponseEntity.ok(productMapper.toDTO(productRepo.save(existingProduct)));
+        return productMapper.toDTO(productRepo.save(existingProduct));
     }
 
     @Transactional
-    public ResponseEntity<String> deleteProduct(Long id) {
-        if(!productRepo.existsById(id)){
-            throw new ResourceNotFoundException("Not Found");
-        }
-        productRepo.deleteById(id);
-        return ResponseEntity.ok("Deleted Successfully");
+    public String deleteProduct(Long id) {
+        Product product = productRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        productRepo.delete(product);
+        return "Deleted Successfully";
     }
 
 
-    public ResponseEntity<ProductDTO> getProduct(Long id) {
+    @Transactional(readOnly = true)
+    public ProductDTO getProduct(Long id) {
         Product product=productRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("not found"));
-        return ResponseEntity.ok(productMapper.toDTO(product));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        return productMapper.toDTO(product);
     }
 
-    public ResponseEntity<Page<ProductListDTO>> getProducts(Pageable pageable) {
-        return ResponseEntity.ok(productRepo.getProductsWithoutComments(pageable));
+    @Transactional(readOnly = true)
+    public Page<ProductListDTO> getProducts(Pageable pageable) {
+        return productRepo.getProductsWithoutComments(pageable);
     }
 }

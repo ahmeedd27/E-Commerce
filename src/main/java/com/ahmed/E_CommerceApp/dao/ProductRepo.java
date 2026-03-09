@@ -2,7 +2,6 @@ package com.ahmed.E_CommerceApp.dao;
 
 import com.ahmed.E_CommerceApp.dto.ProductListDTO;
 import com.ahmed.E_CommerceApp.model.Product;
-import com.ahmed.E_CommerceApp.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
