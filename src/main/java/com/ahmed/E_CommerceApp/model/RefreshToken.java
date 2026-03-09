@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class RefreshToken {
 
     @Id
@@ -28,6 +27,7 @@ public class RefreshToken {
     // When this token expires
     @Column(nullable = false)
     private LocalDateTime expiresAt;
+
 
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);

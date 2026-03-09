@@ -16,6 +16,9 @@ public class LoginRateLimiter {
     private final Map<String, Bucket> loginBuckets = new ConcurrentHashMap<>();
     private final Map<String, Bucket> confirmBuckets = new ConcurrentHashMap<>();
     private final Map<String, Bucket> registerBuckets = new ConcurrentHashMap<>();
+    private final Map<String, Bucket> resendBuckets = new ConcurrentHashMap<>();
+    private final Map<String, Bucket> logoutBuckets = new ConcurrentHashMap<>();
+
 
     // ─── Login: 5 attempts, refill 1 per minute ───────────────────
     public boolean isLoginAllowed(String ip) {
@@ -37,6 +40,19 @@ public class LoginRateLimiter {
     public boolean isConfirmEmailAllowed(String ip) {
         return confirmBuckets
                 .computeIfAbsent(ip, k -> buildBucket(5, 1, Duration.ofMinutes(10)))
+                .tryConsume(1);
+    }
+
+    public boolean isResendAllowed(String ip) {
+        return resendBuckets
+                .computeIfAbsent(ip, k -> buildBucket(3, 1, Duration.ofHours(1)))
+                .tryConsume(1);
+    }
+
+
+    public boolean isLogoutAllowed(String ip) {
+        return logoutBuckets
+                .computeIfAbsent(ip, k -> buildBucket(10, 1, Duration.ofMinutes(1)))
                 .tryConsume(1);
     }
 

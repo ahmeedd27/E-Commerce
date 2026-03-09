@@ -41,6 +41,9 @@ public class User {
             fetch = FetchType.LAZY , orphanRemoval = true)
     private List<Comment> comments;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private RefreshToken refreshToken;
+
     private boolean emailConfirmation;
 
     private String confirmationCode;

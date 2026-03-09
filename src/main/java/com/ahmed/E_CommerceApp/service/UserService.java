@@ -157,8 +157,8 @@ public class UserService {
     }
 
     // this method meant for one who register and want to confirm after he register by more than 15 minutes
-    public String resendConfirmationCode(String email) {
-        User user = userRepo.findByEmail(email)
+    public String resendConfirmationCode(ResendConfirmationRequest request) {
+        User user = userRepo.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // No point resending if already confirmed

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -27,16 +28,15 @@ public class RefreshTokenService {
         // One user = one refresh token at a time
         refreshTokenRepo.deleteByUser(user);
 
-        RefreshToken refreshToken = RefreshToken.builder()
-                .token(UUID.randomUUID().toString()) // random, unguessable string
-                .user(user)
-                .expiresAt(LocalDateTime.now()
-                        .plusSeconds(refreshExpiration / 1000)) // convert ms to seconds
-                .build();
-
+        RefreshToken refreshToken=new RefreshToken();
+        refreshToken.setToken(UUID.randomUUID().toString());
+        refreshToken.setUser(user);
+        refreshToken.setExpiresAt(LocalDateTime.now()
+                .plus(Duration.ofMillis(refreshExpiration)));
         return refreshTokenRepo.save(refreshToken);
     }
 
+    @Transactional
     public RefreshToken validateRefreshToken(String token) {
         RefreshToken refreshToken = refreshTokenRepo.findByToken(token)
                 .orElseThrow(() -> new ResourceNotFoundException(

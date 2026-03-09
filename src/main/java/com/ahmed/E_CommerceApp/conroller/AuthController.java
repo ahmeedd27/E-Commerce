@@ -1,7 +1,6 @@
 package com.ahmed.E_CommerceApp.conroller;
 
 import com.ahmed.E_CommerceApp.Config.LoginRateLimiter;
-import com.ahmed.E_CommerceApp.dao.ResendConfirmationRequest;
 import com.ahmed.E_CommerceApp.dto.*;
 import com.ahmed.E_CommerceApp.exception.TooManyRequestsException;
 import com.ahmed.E_CommerceApp.service.UserService;
@@ -81,14 +80,14 @@ public class AuthController {
         // Rate limit it — same as confirm-email
         // Without this, attacker can spam the email server
         String clientIp = loginRateLimiter.getClientIp(httpRequest);
-        if (!loginRateLimiter.isConfirmEmailAllowed(clientIp)) {
+        if (!loginRateLimiter.isResendAllowed(clientIp)) {
             throw new TooManyRequestsException(
                     "Too many requests. Please wait before trying again."
             );
         }
 
         return ResponseEntity.ok(
-                userService.resendConfirmationCode(request.getEmail())
+                userService.resendConfirmationCode(request)
         );
     }
 
@@ -111,7 +110,15 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(Authentication authentication) {
+    public ResponseEntity<String> logout(Authentication authentication,
+                                         HttpServletRequest httpRequest) {
+        String clientIp = loginRateLimiter.getClientIp(httpRequest);
+        if (!loginRateLimiter.isLogoutAllowed(clientIp)) {
+            throw new TooManyRequestsException(
+                    "Too many requests. Please wait before trying again."
+            );
+        }
+
         return ResponseEntity.ok(userService.logout(authentication));
     }
 
