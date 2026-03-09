@@ -4,6 +4,7 @@ import com.ahmed.E_CommerceApp.Config.CustomUserDetails;
 import com.ahmed.E_CommerceApp.dao.UserRepo;
 import com.ahmed.E_CommerceApp.dto.*;
 import com.ahmed.E_CommerceApp.exception.ResourceNotFoundException;
+import com.ahmed.E_CommerceApp.model.RefreshToken;
 import com.ahmed.E_CommerceApp.model.User;
 import com.ahmed.E_CommerceApp.model.enums.Role;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class UserService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final RefreshTokenService refreshTokenService;
 
 
     public RegisterResponse register(RegisterRequest request) {
@@ -74,16 +76,53 @@ public class UserService {
 
     public LoginResponse loginUser(LoginRequest request) {
         var authUser = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(), request.getPassword()
+                )
         );
+
         CustomUserDetails userDetails = (CustomUserDetails) authUser.getPrincipal();
-        String token = jwtService.generateToken(userDetails);
+
+        // Generate short-lived access token
+        String accessToken = jwtService.generateToken(userDetails);
+
+        // Generate long-lived refresh token and save to DB
+        RefreshToken refreshToken = refreshTokenService
+                .createRefreshToken(userDetails.getUser());
+
         return LoginResponse.builder()
-                .token(token)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken.getToken())
                 .type("Bearer")
                 .email(userDetails.getUsername())
                 .role(userDetails.getUser().getRole().name())
                 .build();
+    }
+
+    public RefreshTokenResponse refreshAccessToken(RefreshTokenRequest request) {
+        // Validate refresh token — throws if invalid or expired
+        RefreshToken refreshToken = refreshTokenService
+                .validateRefreshToken(request.getRefreshToken());
+
+        // Get the user from the refresh token
+        User user = refreshToken.getUser();
+
+        // Wrap in CustomUserDetails to generate new access token
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        String newAccessToken = jwtService.generateToken(userDetails);
+
+        return RefreshTokenResponse.builder()
+                .accessToken(newAccessToken)
+                .type("Bearer")
+                .build();
+    }
+
+    public String logout(Authentication connectedUser) {
+        CustomUserDetails userDetails =
+                (CustomUserDetails) connectedUser.getPrincipal();
+        // Delete refresh token from DB — token is now dead
+        refreshTokenService.deleteByUser(userDetails.getUser());
+        return "Logged out successfully";
     }
 
 

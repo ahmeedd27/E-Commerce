@@ -55,6 +55,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/confirm-email").permitAll()
                         .requestMatchers("/api/auth/resend-confirmation").permitAll()
+                        .requestMatchers("/api/auth/refresh").permitAll()
 
                         .requestMatchers("/api/orders/{orderId}/status").hasRole("ADMIN")
                         .requestMatchers("/api/products/createProduct" ,
