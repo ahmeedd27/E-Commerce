@@ -3,6 +3,7 @@ package com.ahmed.E_CommerceApp.Config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -56,6 +57,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/confirm-email").permitAll()
                         .requestMatchers("/api/auth/resend-confirmation").permitAll()
                         .requestMatchers("/api/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()      //  add
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
 
                         .requestMatchers("/api/orders/{orderId}/status").hasRole("ADMIN")
                         .requestMatchers("/api/products/createProduct" ,
