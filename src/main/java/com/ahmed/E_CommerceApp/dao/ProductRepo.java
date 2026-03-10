@@ -15,8 +15,7 @@ import java.util.Optional;
 
 @Repository
 // fix: added JpaSpecificationExecutor — enables the ProductSpec search to work
-public interface ProductRepo extends JpaRepository<Product, Long>,
-                                      JpaSpecificationExecutor<Product> {
+public interface ProductRepo extends JpaRepository<Product, Long> {
 
     // ─── List query — no comments, projects into lightweight DTO ──
     @Query("""
