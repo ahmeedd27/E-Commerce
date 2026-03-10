@@ -20,5 +20,4 @@ public class ProductDTO {
     private Integer quantity;
     private String imageUrl;      //  set by server
     private String categoryName;  //  name not ID — client doesn't need the ID
-    private List<CommentDTO> comments; //  response only
 }

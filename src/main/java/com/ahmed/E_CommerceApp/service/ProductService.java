@@ -87,8 +87,7 @@ public class ProductService {
     // ─── GET SINGLE ───────────────────────────────────────────
     @Transactional(readOnly = true)
     public ProductDTO getProduct(Long id) {
-        return productMapper.toDTO(
-                productRepo.findByIdWithComments(id)
+        return productMapper.toDTO(productRepo.findByIdWithCategories(id)
                            .orElseThrow(() -> new ResourceNotFoundException(
                                    "Product not found with id: " + id)));
     }

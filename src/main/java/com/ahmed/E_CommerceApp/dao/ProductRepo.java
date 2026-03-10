@@ -14,7 +14,6 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 @Repository
-// fix: added JpaSpecificationExecutor — enables the ProductSpec search to work
 public interface ProductRepo extends JpaRepository<Product, Long> {
 
     // ─── List query — no comments, projects into lightweight DTO ──
@@ -46,13 +45,11 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
             Pageable pageable
     );
 
-    // ─── Single product — fetch comments eagerly to avoid N+1 ─────
+    // ─── Single product — fetch ─────
     @Query("""
         SELECT p FROM Product p
-        LEFT JOIN FETCH p.comments c
-        LEFT JOIN FETCH c.user
         LEFT JOIN FETCH p.category
         WHERE p.id = :id
         """)
-    Optional<Product> findByIdWithComments(@Param("id") Long id);
+    Optional<Product> findByIdWithCategories(@Param("id") Long id);
 }

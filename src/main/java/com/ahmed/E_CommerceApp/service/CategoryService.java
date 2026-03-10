@@ -40,21 +40,22 @@ public class CategoryService {
     // ─── UPDATE ───────────────────────────────────────────────
     @Transactional
     public CategoryDTO updateCategory(Long id, CategoryCreateRequest request) {
-        Category category = categoryRepo.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException(
-                "Category not found with id: " + id));
+        //  products already loaded — no lazy trigger
+        Category category = categoryRepo.findByIdWithProducts(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Category not found with id: " + id));
 
-        // Guard: new name must not clash with another category
         if (categoryRepo.existsByNameIgnoreCaseAndIdNot(request.getName(), id)) {
             throw new IllegalArgumentException(
-                "Category with name '" + request.getName() + "' already exists");
+                    "Category with name '" + request.getName() + "' already exists");
         }
 
         categoryMapper.updateEntityFromRequest(request, category);
         Category updated = categoryRepo.save(category);
 
         CategoryDTO dto = categoryMapper.toDTO(updated);
-        dto.setProductCount(updated.getProducts() != null ? updated.getProducts().size() : 0);
+        dto.setProductCount(updated.getProducts() != null
+                ? updated.getProducts().size() : 0); //  already in memory
         return dto;
     }
 

@@ -59,12 +59,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()      //  add
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/*/comments").permitAll()
 
-                        .requestMatchers("/api/orders/{orderId}/status").hasRole("ADMIN")
-                        .requestMatchers("/api/products/createProduct" ,
-                                "/api/products/updateProduct"
-                                , "/api/products/deleteProduct" )
-                        .hasRole("ADMIN")
 
                         .requestMatchers("swagger-ui.html", "swagger-ui/**" ,
                            "/v3/api-docs" , "/v3/api-docs/**" , "/swagger-resources/**",

@@ -1,21 +1,21 @@
 package com.ahmed.E_CommerceApp.dto;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 
-
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CommentDTO {
     private Long id;
-    @NotBlank(message = "content is required")
     private String content;
-    @Max(value=5)
-    @Min(value=1)
     private Integer score;
     private Long userId;
+    private String userEmail;    //  added — client needs to show who wrote it
     private LocalDateTime createdAt;
 }
