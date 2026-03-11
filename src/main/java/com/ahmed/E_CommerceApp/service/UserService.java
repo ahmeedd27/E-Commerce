@@ -1,9 +1,11 @@
 package com.ahmed.E_CommerceApp.service;
 
 import com.ahmed.E_CommerceApp.Config.CustomUserDetails;
+import com.ahmed.E_CommerceApp.dao.CartRepo;
 import com.ahmed.E_CommerceApp.dao.UserRepo;
 import com.ahmed.E_CommerceApp.dto.*;
 import com.ahmed.E_CommerceApp.exception.ResourceNotFoundException;
+import com.ahmed.E_CommerceApp.model.Cart;
 import com.ahmed.E_CommerceApp.model.RefreshToken;
 import com.ahmed.E_CommerceApp.model.User;
 import com.ahmed.E_CommerceApp.model.enums.Role;
@@ -14,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -28,8 +31,10 @@ public class UserService {
     private final JwtService jwtService;
     private final EmailService emailService;
     private final RefreshTokenService refreshTokenService;
+    private final CartRepo cartRepo;
 
 
+    @Transactional
     public RegisterResponse register(RegisterRequest request) {
         if (userRepo.findByEmail(request.getEmail()).isPresent()) {
             throw new IllegalStateException("Email already exists");
@@ -43,8 +48,13 @@ public class UserService {
                 .confirmationCodeExpiresAt(LocalDateTime.now().plusMinutes(15))
                 .emailConfirmation(false)
                 .build();
-        emailService.sendConfirmationCode(user);
         User saved = userRepo.save(user);
+        emailService.sendConfirmationCode(user);
+        Cart cart = Cart.builder()
+                .user(saved)
+                .updatedAt(LocalDateTime.now())
+                .build();
+        cartRepo.save(cart);
         return new RegisterResponse(
                 saved.getId(),
                 saved.getEmail(),
